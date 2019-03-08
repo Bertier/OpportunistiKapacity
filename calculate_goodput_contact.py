@@ -10,7 +10,10 @@ import json
 import sys
 import pickle
 
-
+if len(sys.argv) < 4:
+    print "Error: not enough arguments."
+    print "Usage: %s file_dataset propagation_model modulation_scheme" % sys.argv[0]
+    exit(1)
 dataset=sys.argv[1]
 propagation_name=sys.argv[2]
 modulation_name=sys.argv[3]
