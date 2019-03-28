@@ -147,6 +147,8 @@ def DISTANCE_TO_RSSI(distance,Tx=9.19,pathloss=freespace_loss):
 
 propagation_models=[freespace_loss,logDistance_loss,twoRay_loss]
 modulation_schemes=[Wifi5_empirical_goodput,Wifi5_stepwise_max,Wifi5_stepwise_linear_adjusted,Wifi5_stepwise_fit]
+propagation_models_names=[freespace_loss.func_name,logDistance_loss.func_name,twoRay_loss.func_name]
+modulation_schemes_names=[Wifi5_empirical_goodput.func_name,Wifi5_stepwise_max.func_name,Wifi5_stepwise_linear_adjusted.func_name,Wifi5_stepwise_fit.func_name]
 
 if __name__ == "__main__":
     f, axarr = plt.subplots(3, 1)
