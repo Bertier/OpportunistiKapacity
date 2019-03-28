@@ -30,6 +30,7 @@ if os.path.isfile(dataset):
     time=Decimal(first_line[0])
     file_handle.seek(0)
 else:
+    print("Error, '%s' is not a file or does not exist."%dataset)
     sys.exit(1)
 
 propagation=False
@@ -39,7 +40,8 @@ for p in ModelNearbyWoWMoM.propagation_models:
         propagation=p
         break
 if not propagation:
-    print "error, propagation not found"
+    print("Error, propagation not found.")
+    print("Available propagations: "+str((ModelNearbyWoWMoM.propagation_models_names)))
     sys.exit(2)
 
 for m in ModelNearbyWoWMoM.modulation_schemes:
@@ -47,7 +49,8 @@ for m in ModelNearbyWoWMoM.modulation_schemes:
         modulation=m
         break
 if not modulation:
-    print "error, modulation not found"
+    print "Error, modulation not found."
+    print("Available modulations: "+str((ModelNearbyWoWMoM.modulation_schemes_names)))
     sys.exit(3)
 
 
