@@ -9,14 +9,29 @@ import ModelNearbyWoWMoM
 import json
 import sys
 import pickle
-
+import os
+from decimal import Decimal
 if len(sys.argv) < 4:
     print "Error: not enough arguments."
     print "Usage: %s file_dataset propagation_model modulation_scheme" % sys.argv[0]
     exit(1)
+
+"""
+For now, the dataset's format should be
+time dummy ID x y
+"""
 dataset=sys.argv[1]
 propagation_name=sys.argv[2]
 modulation_name=sys.argv[3]
+#attempt to open the dataset
+if os.path.isfile(dataset):
+    file_handle=open(dataset,"r")
+    first_line=file_handle.readline().split()
+    time=Decimal(first_line[0])
+    file_handle.seek(0)
+else:
+    sys.exit(1)
+
 propagation=False
 modulation=False
 for p in ModelNearbyWoWMoM.propagation_models:
@@ -25,7 +40,7 @@ for p in ModelNearbyWoWMoM.propagation_models:
         break
 if not propagation:
     print "error, propagation not found"
-    exit(1)
+    sys.exit(2)
 
 for m in ModelNearbyWoWMoM.modulation_schemes:
     if m.func_name == modulation_name:
@@ -33,16 +48,9 @@ for m in ModelNearbyWoWMoM.modulation_schemes:
         break
 if not modulation:
     print "error, modulation not found"
-    exit(1)
-if dataset=="luxembourg":
-    import Luxembourg as ds
-    test_range=[29000,30000]
-elif dataset=="stockholm":
-    import Stockholm as ds
-    test_range=[ds.start_time,ds.end_time-1]
-else:
-    print "Unknown dataset %s" %  dataset
-    exit(1)
+    sys.exit(3)
+
+
     
 directory="../../data/pickle_graphs/"
 output_dir="../../data/contacts_capacity/"
@@ -122,3 +130,4 @@ for time in np.arange(test_range[0],test_range[1],ds.time_granularity):
 with open(output_dir+'contacts_data_nearby_%s_%s_%s_%s_%s.json' % (test_range[0],test_range[1],dataset,propagation_name,modulation_name), 'w') as fp:
     json.dump(terminated_contacts, fp)
     #print "writing disabled for test. Uncomment line in code to enable writing output."
+sys.exit()
