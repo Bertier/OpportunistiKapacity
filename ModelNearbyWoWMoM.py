@@ -89,7 +89,7 @@ def Wifi5_empirical_goodput(rssi):
 
 def Wifi5_stepwise_max(rssi):
     threshold_rssi=np.array([0,-55,-57,-58,-59,-63,-67,-70,-72,-75,-min_rssi])
-    data_rate=[866,780,650,585,520,390,260,195,130,65]
+    data_rate=[866.0,780.0,650.0,585.0,520.0,390.0,260.0,195.0,130.0,65.0]
     if rssi >= 0:
         return data_rate[0]
     elif rssi < threshold_rssi[-1]:
