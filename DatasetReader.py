@@ -30,7 +30,7 @@ class DatasetReader(object):
     time dummy ID x y
     """
     def next(self):
-        current=[self.previous]
+        current=self.previous[:]
         for line in self.file_handle:
             fields=line.split(self.field_separator)
             current_time=Decimal(fields[0])
@@ -42,4 +42,4 @@ class DatasetReader(object):
                 current.append([fields[0],fields[2],fields[3],fields[4]])
         if self.previous == current[0]:
             raise StopIteration
-        return np.array(current)
+        return np.array(current).T
