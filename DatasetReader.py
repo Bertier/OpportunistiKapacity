@@ -30,7 +30,7 @@ class DatasetReader(object):
     time dummy ID x y
     """
     def next(self):
-        current=self.previous[:]
+        current = [self.previous[:]] if len(self.previous) else []
         for line in self.file_handle:
             fields=line.split(self.field_separator)
             current_time=Decimal(fields[0])
