@@ -11,6 +11,9 @@ import sys
 import pickle
 import os
 from decimal import Decimal
+from DatasetReader import DatasetReader
+from scipy import spatial
+    
 if len(sys.argv) < 4:
     print "Error: not enough arguments."
     print "Usage: %s file_dataset propagation_model modulation_scheme" % sys.argv[0]
@@ -23,15 +26,6 @@ time dummy ID x y
 dataset=sys.argv[1]
 propagation_name=sys.argv[2]
 modulation_name=sys.argv[3]
-#attempt to open the dataset
-if os.path.isfile(dataset):
-    file_handle=open(dataset,"r")
-    first_line=file_handle.readline().split()
-    time=Decimal(first_line[0])
-    file_handle.seek(0)
-else:
-    print("Error, '%s' is not a file or does not exist."%dataset)
-    sys.exit(1)
 
 propagation=False
 modulation=False
@@ -52,22 +46,15 @@ if not modulation:
     print "Error, modulation not found."
     print("Available modulations: "+str((ModelNearbyWoWMoM.modulation_schemes_names)))
     sys.exit(3)
-
-
     
 directory="../../data/pickle_graphs/"
-output_dir="../../data/contacts_capacity/"
-#test_range=[14400,79200] # toute la journee
-#test_range=[30000,31200] # peak
-#test_range=[39600,54000] # mid-day
-#test_range=[5000,15000] # night
+output_dir="./res"
 
+#TODO: get granularity from dataset
+time_granularity=0.6
+xa=time_granularity
+xb=time_granularity*2
 
-
-
-xa=ds.time_granularity
-xb=ds.time_granularity*2
-time_granularity=ds.time_granularity
 def linear(x, a, b):
     return a*x + b
 def integrate(ya,yb):
@@ -80,9 +67,20 @@ def integrate(ya,yb):
 current_contacts={}
 current_contacts_start={}
 terminated_contacts={}
+rssi_func=np.vectorize(ModelNearbyWoWMoM.DISTANCE_TO_RSSI)
+bps_func=np.vectorize(ModelNearbyWoWMoM.RSSI_TO_BPS)
 
-for time in np.arange(test_range[0],test_range[1],ds.time_granularity):
-    current_graph={}
+#for time in np.arange(test_range[0],test_range[1],ds.time_granularity):
+for time,id_nodes,posx_nodes,posy_nodes in DatasetReader(dataset):
+    #Get the current position of all nodes
+    position_nodes=np.array((posx_nodes,posy_nodes)).astype(float).T
+    #Find which nodes are able to exchange data
+    distance_between_nodes = spatial.distance.cdist(position_nodes,position_nodes)
+    throughput_between_nodes=bps_func(rssi_func(distance_between_nodes,pathloss=propagation),modulation_scheme=modulation)
+    throughput_between_nodes *= np.tri(*throughput_between_nodes.shape)
+    np.fill_diagonal(throughput_between_nodes,0)
+    current_edges_indexes=np.where(throughput_between_nodes > 0)
+    
     for edge,distance in pickle.load(open(directory + "%s_%s.pkl" % (dataset,time), 'rb') ).items():
         #value_goodput=RSSI_TO_BPS(freespace_Rx(distance,10))
         rssi=ModelNearbyWoWMoM.DISTANCE_TO_RSSI(distance,pathloss=propagation)
