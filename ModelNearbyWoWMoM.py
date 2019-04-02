@@ -1,14 +1,10 @@
 #!/usr/bin/python
 """
-Library to estimate the throughput according to distance.
+Helper functions to estimate the throughput according to distance.
 """
 import numpy as np
 from scipy.constants import speed_of_light
-import matplotlib.pyplot as plt
-from lmfit import Model,Parameters
-import matplotlib.font_manager as fm
 import json
-import matplotlib
 import glob
 
 
