@@ -10,8 +10,7 @@ import matplotlib.font_manager as fm
 import json
 import matplotlib
 import glob
-#prop = fm.FontProperties(fname='/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',size=42)
-prop = fm.FontProperties(fname='/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',size=12)
+
 
 """
 CONSTANTS
@@ -150,18 +149,4 @@ modulation_schemes=[Wifi5_empirical_goodput,Wifi5_stepwise_max,Wifi5_stepwise_li
 propagation_models_names=[freespace_loss.func_name,logDistance_loss.func_name,twoRay_loss.func_name]
 modulation_schemes_names=[Wifi5_empirical_goodput.func_name,Wifi5_stepwise_max.func_name,Wifi5_stepwise_linear_adjusted.func_name,Wifi5_stepwise_fit.func_name]
 
-if __name__ == "__main__":
-    f, axarr = plt.subplots(3, 1)
-    distances=np.linspace(0.001,400,1000)
-    
-    for propag in propagation_models:
-        axarr[0].plot(distances,DISTANCE_TO_RSSI(distances, pathloss=propag),label=propag.func_name)
-        print distances[np.where(np.array(DISTANCE_TO_RSSI(distances, pathloss=propag)) < -min_rssi)[0][0]]
-        axarr[2].plot(distances,RSSI_TO_BPS(DISTANCE_TO_RSSI(distances,pathloss=propag)),label="%s goodput" % propag.func_name)
-    axarr[0].legend() 
-    rssi=np.linspace(50,-150,1000)
-    for modulation in modulation_schemes:
-        axarr[1].plot(rssi,RSSI_TO_BPS(rssi, modulation_scheme=modulation),label=str(modulation.func_name))
-    axarr[1].legend()
-    plt.show()
     
