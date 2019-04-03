@@ -148,10 +148,10 @@ class ContactTrace(object):
             time_contact=time_end-time_start
             if time_contact.total_seconds() > 0:
                 index_sampling=int((time_contact.total_seconds() // self.sampling_granularity)*self.sampling_granularity)
+                if index_sampling > ((self.number_samples-1)*self.sampling_granularity):
+                    index_sampling = (self.number_samples-1) * self.sampling_granularity
                 formated_time_key="%s-%s" % (index_sampling,index_sampling+self.sampling_granularity)
                 throughput_values,probability_value=self.contact_time_to_throughput_probability[formated_time_key]
-                final_edge_key = "contact:%s-%s;time:%s-%s" % (id1,id2, time_start_raw, time_end_raw)
-                terminated_contacts[final_edge_key]=np.random.choice(throughput_values,p=probability_value)
-                
-                
+                final_contact_key = "contact:%s-%s;time:%s-%s" % (id1,id2, time_start_raw, time_end_raw)
+                terminated_contacts[final_contact_key]=np.random.choice(throughput_values,p=probability_value)
         return terminated_contacts

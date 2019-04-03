@@ -7,7 +7,7 @@ import os
 from decimal import Decimal
 import numpy as np
 import json
-from opportunistikapacity import GeographicTrace
+from opportunistikapacity import GeographicTrace,ContactTrace
 import ModelNearbyWoWMoM
 
 if len(sys.argv) < 4:
@@ -44,14 +44,18 @@ if not modulation:
     print("Available modulations: "+str((ModelNearbyWoWMoM.modulation_schemes_names)))
     sys.exit(3)
     
-output_dir="./res/"
+output_dir="./results/"
 
-trace=GeographicTrace(dataset,propagation,modulation)
+#trace=GeographicTrace(dataset,propagation,modulation)
+#all_contacts=trace.get_capacity()
+trace=ContactTrace(dataset,propagation, modulation, "human")
 all_contacts=trace.get_capacity()
 if not os.path.exists(output_dir):
-    os.mkdir(output_dir) 
+    os.mkdir(output_dir)
+if not os.path.exists(output_dir+dataset.split("/")[0]):
+    os.mkdir(output_dir+dataset.split("/")[0])
 with open(output_dir
-          + 'contacts_data_nearby_%s_%s_%s.json' % (dataset, propagation_name, modulation_name),
+          + 'contacts_%s_%s.json' % (propagation_name, modulation_name),
           'w') as fp:
-    json.dump(all_contacts, fp,ensure_ascii=False,indent=4)
+    json.dump(all_contacts, fp, ensure_ascii=False, indent=4)
 sys.exit()
