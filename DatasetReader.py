@@ -43,3 +43,24 @@ class DatasetReader(object):
         if self.previous == current[0]:
             raise StopIteration
         return np.array(current).T
+
+    
+class ContactReader(object):
+    
+    def __init__(self, dataset, start=-1,end=-1,field_separator=' '):
+        if not os.path.isfile(dataset):
+            print("Error, '%s' is not a file or does not exist." % dataset)
+            sys.exit(0)
+        self.file_handle=open(dataset,"r")
+        self.field_separator=field_separator
+
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        #TODO: Field seperator fix
+        fields=self.file_handle.readline().split()
+        if len(fields):
+            return fields[0:4]
+        else:
+            raise StopIteration
