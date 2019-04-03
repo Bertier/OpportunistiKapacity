@@ -11,7 +11,7 @@ from scipy import spatial
 from datetime import datetime
 import json
 from DatasetReader import DatasetReader,ContactReader
-import ModelNearbyWoWMoM
+import communications
 
 
 class GeographicTrace(object):
@@ -22,8 +22,8 @@ class GeographicTrace(object):
         self.time_granularity=0.6
         self.xa=self.time_granularity
         self.xb=self.time_granularity*2
-        self.rssi_func = np.vectorize(ModelNearbyWoWMoM.DISTANCE_TO_RSSI)
-        self.bps_func = np.vectorize(ModelNearbyWoWMoM.RSSI_TO_BPS)
+        self.rssi_func = np.vectorize(communications.DISTANCE_TO_RSSI)
+        self.bps_func = np.vectorize(communications.RSSI_TO_BPS)
         self.dataset=dataset
         
     def linear(self, x, a, b):
@@ -110,8 +110,6 @@ class ContactTrace(object):
         folder_ressources="./ressources/proba_duration_capacity"
         self.propagation=propagation
         self.modulation=modulation
-        self.rssi_func = np.vectorize(ModelNearbyWoWMoM.DISTANCE_TO_RSSI)
-        self.bps_func = np.vectorize(ModelNearbyWoWMoM.RSSI_TO_BPS)
         self.dataset=dataset
         
         if data_kind == "human":

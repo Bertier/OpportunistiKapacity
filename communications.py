@@ -5,7 +5,7 @@ Helper functions to estimate the throughput according to distance.
 import numpy as np
 from scipy.constants import speed_of_light
 import json
-import glob
+
 
 
 """
@@ -28,9 +28,10 @@ def Wifi5_goodput_bottleneck(rssi):
 
 """
 PROPAGATION MODELS
+Takes a distance, returns the loss in dBm.
 """
 
-def freespace_loss(distance,Tx=10):
+def freespace_loss(distance):
     loss=20*np.log10(4*np.pi*distance/wavelength)
     return loss if loss > 0 else 0
 
@@ -58,6 +59,7 @@ def twoRay_loss(distance, epsilon_r=1.00673130,height=1.39):
 
 """
 MODULATION SCHEMES
+Take the rssi as an argument, returns the expected throughput.
 """
 
 def Wifi5_empirical_goodput(rssi):
@@ -73,7 +75,6 @@ def Wifi5_empirical_goodput(rssi):
     args=[-1,[-0.359363,42.356715],[-0.791134,66.438033],[-0.236949,21.128388]]
     if rssi > limits[-1]:
         return 0
-    
     for j,lower in enumerate(limits):
         if lower < rssi <= limits[j+1]:
             if hasattr(args[j], "__len__"):
