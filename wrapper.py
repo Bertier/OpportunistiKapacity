@@ -9,22 +9,20 @@ import numpy as np
 import json
 import argparse
 from opportunistikapacity import GeographicTrace,ContactTrace
-import ModelNearbyWoWMoM
+import communications
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("dataset",type=argparse.FileType('r'))
-    parser.add_argument("propagation_model")
-    parser.add_argument("modulation_scheme")
+    parser.add_argument("dataset",type=argparse.FileType('r'),help="Location of the trace file.")
+    parser.add_argument("propagation_model",type=str,help="Signal loss model name. Available choices: %s" % str(communications.propagation_models_names).strip('[]'))
+    parser.add_argument("modulation_scheme",type=str,help="Modulation scheme name. Available choices: %s" % str(communications.modulation_schemes_names).strip('[]'))
+    parser.add_argument("trace_kind",type=str,help="Two kinds of traces supported: 'mobility' (spatial coordinates) or 'contact' (duration of contacts).")
     parser.parse_args()
-
-    """
-    For now, the dataset's format should be
-    time dummy ID x y
-    """
+    
     dataset=sys.argv[1]
     propagation_name=sys.argv[2]
     modulation_name=sys.argv[3]
+    trace_kind=sys.argv[4]
 
     propagation=False
     modulation=False
@@ -43,16 +41,20 @@ if __name__ == '__main__':
             modulation=m
             break
     if not modulation:
-        print "Error, modulation not found."
+        print("Error, modulation not found.")
         print("Available modulations: "+str((ModelNearbyWoWMoM.modulation_schemes_names)))
         sys.exit(3)
 
     output_dir="./results/"
-
-    #trace=GeographicTrace(dataset,propagation,modulation)
-    #all_contacts=trace.get_capacity()
-    trace=ContactTrace(dataset,propagation, modulation, "human")
-    all_contacts=trace.get_capacity()
+    if trace_kind == "mobility":
+        trace=GeographicTrace(dataset,propagation,modulation)
+        all_contacts=trace.get_capacity()
+    elif trace_kind == "contact":
+        trace=ContactTrace(dataset,propagation, modulation, "human")
+        all_contacts=trace.get_capacity()
+    else:
+        print("The trace kind '%s' is unknown or not supported." % trace_kind)
+        sys.exit(7)
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
     if not os.path.exists(output_dir+dataset.split("/")[0]):
