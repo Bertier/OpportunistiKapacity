@@ -48,36 +48,40 @@ class DatasetReader(object):
         self.line_regex=re.compile(r'%s'% pre_regex_format.format(**mobility_params))
         #Get the first timestamp of the file.
         self.file_handle=open(dataset,"r")
-        self.field_separator=field_separator
-        first_line=self.file_handle.readline().split(field_separator)
-        self.test=re.compile(float_re)
-        self.time=Decimal(first_line[0])
+        first_match=self.line_regex.search(self.file_handle.readline())
+        if first_match is None:
+            print("Dataset file does not match the pattern %s with delimiter. Please check file." % raw_file_format)
+            sys.exit(9)
+            
+        self.time=Decimal(self.line_regex.search(self.file_handle.readline()).group('time'))
         #Loop to find the second timestamp, then reset cursor in file.
         for line in self.file_handle:
-            fields=line.split(" ")
-            current_time=Decimal(fields[0])
+            current_time=Decimal(self.line_regex.search(line).group('time'))
             if current_time != self.time:
                 granularity=current_time - self.time
                 break
         self.file_handle.seek(0)
         self.previous=[]
+        self.line_number=1
     def __iter__(self):
         return self
-    """
-    For now, the dataset's format should be
-    time dummy ID x y
-    """
+
     def next(self):
         current = [self.previous[:]] if len(self.previous) else []
         for line in self.file_handle:
-            fields=line.split(self.field_separator)
-            current_time=Decimal(fields[0])
+            self.line_number+=1
+            fields=self.line_regex.search(line)
+            if fields is None:
+                print("Error in dataset file at line %d. Please check format." % self.line_number)
+                sys.exit(10)
+            current_fields=[fields.group('time'),fields.group('id_node'),fields.group('pos_x'),fields.group('pos_y')]
+            current_time=Decimal(current_fields[0])
             if current_time != self.time:
                 self.time=current_time
-                self.previous=[fields[0],fields[2],fields[3],fields[4]]
+                self.previous=current_fields
                 break
             else:
-                current.append([fields[0],fields[2],fields[3],fields[4]])
+                current.append(current_fields)
         if self.previous == current[0]:
             raise StopIteration
         return np.array(current).T
