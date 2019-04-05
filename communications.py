@@ -5,7 +5,8 @@ Helper functions to estimate the throughput according to distance.
 import numpy as np
 from scipy.constants import speed_of_light
 import json
-
+import ConfigParser
+name_configuration_file='opportunistiKapacity.cfg'
 
 
 """

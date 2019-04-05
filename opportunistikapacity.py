@@ -10,9 +10,10 @@ from scipy.integrate import quad
 from scipy import spatial
 from datetime import datetime
 import json
+import ConfigParser
 from DatasetReader import DatasetReader,ContactReader
 import communications
-
+name_configuration_file='opportunistiKapacity.cfg'
 
 class GeographicTrace(object):
     #TODO: get granularity from dataset
