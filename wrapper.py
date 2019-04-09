@@ -16,6 +16,8 @@ name_configuration_file='opportunistiKapacity.cfg'
 sample_configuration="""
 [contact-trace]
 mobility = human
+column_delimiter = 
+file_parsing = id1 id2 start end dummy
 
 [mobility-trace]
 distance_calculation = euclidean
@@ -50,17 +52,17 @@ if __name__ == '__main__':
     Check if args are correct
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument("trace_kind",type=str,help="Two kinds of traces supported: 'mobility' (spatial coordinates) or 'contact' (duration of contacts).")
     parser.add_argument("dataset",type=argparse.FileType('r'),help="Location of the trace file.")
     parser.add_argument("propagation_model",type=str,help="Signal loss model name. Available choices: %s" % str(communications.propagation_models_names).strip('[]'))
     parser.add_argument("modulation_scheme",type=str,help="Modulation scheme name. Available choices: %s" % str(communications.modulation_schemes_names).strip('[]'))
-    parser.add_argument("trace_kind",type=str,help="Two kinds of traces supported: 'mobility' (spatial coordinates) or 'contact' (duration of contacts).")
-    parser.parse_args()
+    args=parser.parse_args()
 
     
-    dataset=sys.argv[1]
-    propagation_name=sys.argv[2]
-    modulation_name=sys.argv[3]
-    trace_kind=sys.argv[4]
+    dataset=args.dataset
+    propagation_name=args.propagation_model
+    modulation_name=args.modulation_scheme
+    trace_kind=args.trace_kind
     
     propagation=False
     modulation=False
