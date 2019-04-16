@@ -49,9 +49,6 @@ class DatasetReader(object):
     Mobility datasets
     """
     def __init__(self, dataset, start=-1,end=-1,field_separator=' '):
-        if not os.path.isfile(dataset):
-            print("Error, '%s' is not a file or does not exist." % dataset)
-            sys.exit(0)
         #Load the configuration file
         cfg = ConfigParser.ConfigParser()
         cfg.read(name_configuration_file)
@@ -61,10 +58,10 @@ class DatasetReader(object):
         pre_regex_format=("^%s*{" % column_delimiter) + ("}%s+{" % column_delimiter).join(raw_file_format.split()) + "}"
         self.line_regex=re.compile(r'%s'% pre_regex_format.format(**mobility_params))
         #Get the first timestamp of the file.
-        self.file_handle=open(dataset,"r")
+        self.file_handle=dataset
         first_match=self.line_regex.search(self.file_handle.readline())
         if first_match is None:
-            print("Dataset file does not match the pattern %s with delimiter. Please check file." % raw_file_format)
+            print("Dataset file does not match the pattern '%s' with delimiter. Please check file." % raw_file_format)
             sys.exit(9)
             
         self.time=Decimal(self.line_regex.search(self.file_handle.readline()).group('time'))
