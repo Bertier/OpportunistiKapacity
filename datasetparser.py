@@ -43,7 +43,7 @@ contact_params={
 }
 
 
-class DatasetReader(object):
+class MobilityParser(object):
     """
     Iterator over mobility datasets.
     Mobility datasets
@@ -98,13 +98,10 @@ class DatasetReader(object):
         return np.array(current).T
 
     
-class ContactReader(object):
+class ContactParser(object):
     
     def __init__(self, dataset, start=-1,end=-1,field_separator=' '):
-        if not os.path.isfile(dataset):
-            print("Error, '%s' is not a file or does not exist." % dataset)
-            sys.exit(0)
-        self.file_handle=open(dataset,"r")
+        self.file_handle=dataset
         self.field_separator=field_separator
         cfg = ConfigParser.ConfigParser()
         cfg.read(name_configuration_file)

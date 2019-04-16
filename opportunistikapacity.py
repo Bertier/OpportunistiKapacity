@@ -11,7 +11,7 @@ from scipy import spatial
 from datetime import datetime
 import json
 import ConfigParser
-from DatasetReader import DatasetReader, ContactReader
+from datasetparser import MobilityParser, ContactParser
 import communications
 name_configuration_file = 'opportunistiKapacity.cfg'
 
@@ -43,7 +43,7 @@ class GeographicTrace(object):
         active_contacts_data = {}
         active_contacts_start = {}
         terminated_contacts = {}
-        for times, id_nodes, posx_nodes, posy_nodes in DatasetReader(
+        for times, id_nodes, posx_nodes, posy_nodes in MobilityParser(
                 self.dataset):
             time = float(times[0])
             # Get the current position of all nodes
@@ -152,7 +152,7 @@ class ContactTrace(object):
 
     def get_capacity(self):
         terminated_contacts = {}
-        for id1, id2, time_start_raw, time_end_raw in ContactReader(
+        for id1, id2, time_start_raw, time_end_raw in ContactParser(
                 self.dataset):
             # todo: take time format in consideration. For now just make the
             # difference.

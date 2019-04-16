@@ -1,6 +1,7 @@
 #!/usr/bin/python
 """
-Calculate the contact data-exchange through integral linear interpolation.
+Wrapper for the opportunikacapacity library. 
+Aims to calculate the contact data-exchange through integral linear interpolation.
 """
 import sys
 import os
@@ -116,11 +117,12 @@ if __name__ == '__main__':
     output_dir = "./results/"
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-    if not os.path.exists(output_dir + dataset.split("/")[0]):
-        os.mkdir(output_dir + dataset.split("/")[0])
+    if not os.path.exists(output_dir + dataset.name.split("/")[0]):
+        os.mkdir(output_dir + dataset.name.split("/")[0])
     with open(output_dir
-              + dataset.split("/")[0] + "/"
+              + dataset.name.split("/")[0] + "/"
               + 'contacts_%s_%s.json' % (propagation_name, modulation_name),
               'w') as fp:
         json.dump(all_contacts, fp, ensure_ascii=False, indent=4)
+        print("Wrote results to %s" % fp.name)
     sys.exit()
