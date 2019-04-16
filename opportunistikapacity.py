@@ -1,10 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 """
 Calculate the contact data-exchange through integral linear interpolation.
 """
 import sys
-import os
-from decimal import Decimal
 import numpy as np
 from scipy.integrate import quad
 from scipy import spatial
@@ -17,8 +15,16 @@ name_configuration_file = 'opportunistiKapacity.cfg'
 
 
 class GeographicTrace(object):
-    # TODO: get granularity from dataset
+
     def __init__(self, dataset, propagation, modulation, start=-1, end=-1):
+        """
+
+        :param dataset: File object of the mobility trace.
+        :param propagation: Name of propagation (a.k.a. path loss) to be used.
+        :param modulation: Name of the modulation scheme to be used.
+        :param start: Starting time of the capacity calculation. A negative number will start at beginning of file.
+        :param end: Starting time of the capacity calculation. A negative number will stop at the end of file.
+        """
         self.propagation = propagation
         self.modulation = modulation
         self.time_granularity = 0.6
@@ -32,6 +38,12 @@ class GeographicTrace(object):
         return a * x + b
 
     def integrate(self, ya, yb):
+        """
+
+        :param point a:
+        :param point b:
+        :return: The quantity of data sent.
+        """
         a = (yb - ya) / (self.time_granularity)
         b = ya - a * self.xa
         data_contact, error_integration = quad(
@@ -39,6 +51,12 @@ class GeographicTrace(object):
         return data_contact
 
     def get_capacity(self):
+        """Returns all contacts with their duration and estimated capacity.
+
+        :return: Returns a dictionary holding all the terminated contacts information.\n
+         The key is a format 'contact:node1-node2;time:timestart-timeend'.
+         The value is the capacity, in MBytes.
+        """
         old_edges = set()
         active_contacts_data = {}
         active_contacts_start = {}
@@ -117,6 +135,14 @@ class GeographicTrace(object):
 
 class ContactTrace(object):
     def __init__(self, dataset, propagation, modulation, data_kind):
+        """
+
+        :param dataset: File object of the contact trace.
+        :param propagation: Name of propagation (a.k.a. path loss) to be used.
+        :param modulation: Name of the modulation scheme to be used.
+        :param start: Starting time of the capacity calculation. A negative number will start at beginning of file.
+        :param end: Starting time of the capacity calculation. A negative number will stop at the end of file.
+        """
         folder_ressources = "./ressources/proba_duration_capacity"
         self.propagation = propagation
         self.modulation = modulation
@@ -151,6 +177,12 @@ class ContactTrace(object):
         self.number_samples = len(self.contact_time_to_throughput_probability)
 
     def get_capacity(self):
+        """Returns all contacts with their duration and estimated capacity.
+
+        :return: Returns a dictionary holding all the terminated contacts information.\n
+         The key is a format 'contact:node1-node2;time:timestart-timeend'.
+         The value is the capacity, in MBytes.
+        """
         terminated_contacts = {}
         for id1, id2, time_start_raw, time_end_raw in ContactParser(
                 self.dataset):

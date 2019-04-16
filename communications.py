@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 """
 Helper functions to estimate the throughput according to distance.
 """
@@ -29,6 +29,10 @@ def linear(rssi, a, b):
 
 
 def Wifi5_goodput_bottleneck(rssi):
+    """ Returns the maximum speed achieved experimentally
+    :param rssi:
+    :return: The goodput bottleneck. Maximum achieved goodput speed with OnePlus 5T phones.
+    """
     return 24.267885
 
 
@@ -39,11 +43,21 @@ Takes a distance, returns the loss in dBm.
 
 
 def freespace_loss(distance):
+    """Returns the expected signal loss using the free-space loss model.
+    :param distance: Distance in meters.
+    :return: The signal loss in dBm.
+    """
     loss = 20 * np.log10(4 * np.pi * distance / wavelength)
     return loss if loss > 0 else 0
 
 
 def logDistance_loss(distance, alpha=3):
+    """Returns the expected signal loss using the log-distance loss model.
+
+    :param distance: Distance in meters.
+    :param alpha: Attenuation exponent. Fixed to 3 by default.
+    :return: The signal loss in dBm.
+    """
     d0 = 1
     if distance > d0:
         loss = freespace_loss(d0) + 10 * alpha * np.log10(distance / d0)
@@ -53,8 +67,13 @@ def logDistance_loss(distance, alpha=3):
 
 
 def twoRay_loss(distance, epsilon_r=1.00673130, height=1.39):
-    # Tx=10.2
-    # Tx=9.19
+    """Returns the expected signal loss using the two-ray ground reflection loss model.
+
+    :param distance: Distance in meters.
+    :param epsilon_r: Reflection coefficient.
+    :param height: Height of devices from the ground.
+    :return: The signal loss in dBm.
+    """
     height_sender = height
     height_receiver = height
     d_reflection = np.sqrt(
@@ -62,12 +81,12 @@ def twoRay_loss(distance, epsilon_r=1.00673130, height=1.39):
     d_LoS = np.sqrt((distance**2) + (height_sender - height_receiver)**2)
     phi = 2 * np.pi * ((d_LoS - d_reflection) / wavelength)
     sin_theta = (height_sender + height_receiver) / d_reflection
-    cos_theta = (distance) / d_reflection
+    cos_theta = distance / d_reflection
     gamma = (sin_theta - np.sqrt(epsilon_r - cos_theta**2)) / \
         (sin_theta + np.sqrt(epsilon_r - cos_theta ** 2))
-    LossTwoRay = 10 * np.log10((4 * np.pi * (distance / wavelength) * 1 / (
+    loss_two_ray = 10 * np.log10((4 * np.pi * (distance / wavelength) * 1 / (
         np.sqrt(((1 + gamma * np.cos(phi))**2 + gamma**2 * np.sin(phi)**2))))**2)
-    return LossTwoRay if LossTwoRay > 0 else 0
+    return loss_two_ray if loss_two_ray > 0 else 0
 
 
 """
@@ -77,9 +96,14 @@ Take the rssi as an argument, returns the expected throughput.
 
 
 def Wifi5_empirical_goodput(rssi):
+    """Turns a signal strength into a goodput value.
+
+    :param rssi: Expected signal strength (in dBm) between the two nodes.
+    :return: Expected goodput for the given rssi.
+    """
     rssi = np.absolute(rssi)
     """
-    ]0,64] = 24.267885
+    ]0,64] = Wifi5_goodput_bottleneck
     ]64,71] = -0.359363*x+42.356715
     ]71,82] = -0.791134*x+66.438033
     ]82,88] = -0.236949*x+21.128388
@@ -100,6 +124,11 @@ def Wifi5_empirical_goodput(rssi):
 
 
 def Wifi5_stepwise_max(rssi):
+    """Turns a signal strength into a goodput value.
+
+    :param rssi: Expected signal strength (in dBm) between the two nodes.
+    :return: Expected goodput for the given rssi.
+    """
     threshold_rssi = np.array(
         [0, -55, -57, -58, -59, -63, -67, -70, -72, -75, -min_rssi])
     data_rate = [
@@ -122,6 +151,11 @@ def Wifi5_stepwise_max(rssi):
 
 
 def Wifi5_stepwise_linear_adjusted(rssi):
+    """Turns a signal strength into a goodput value.
+
+    :param rssi: Expected signal strength (in dBm) between the two nodes.
+    :return: Expected goodput for the given rssi.
+    """
     threshold_rssi = np.array(
         [0, -55, -57, -58, -59, -63, -67, -70, -72, -75, -min_rssi])
     data_rate = [
@@ -146,6 +180,11 @@ def Wifi5_stepwise_linear_adjusted(rssi):
 
 
 def Wifi5_stepwise_fit(rssi):
+    """Turns a signal strength into a goodput value.
+
+    :param rssi: Expected signal strength (in dBm) between the two nodes.
+    :return: Expected goodput for the given rssi.
+    """
     threshold_rssi = np.array(
         [0, -55, -57, -58, -59, -63, -67, -70, -72, -75, -min_rssi])
     data_rate = np.array([22.894102,
@@ -172,6 +211,11 @@ HELPER FUNCTIONS
 
 
 def RSSI_TO_BPS(rssi, modulation_scheme=Wifi5_empirical_goodput):
+    """Helper function to turn a list of rssi into a list of goodput.
+    :param rssi: Rssi value (int or float) or list of rssi values.
+    :param modulation_scheme: Chosen modulation scheme. Refer to array 'modulation_schemes'
+    :return: Expected Mbits per second.
+    """
     if isinstance(rssi, (list, tuple, np.ndarray)):
         res = []
         for r in rssi:
@@ -184,6 +228,13 @@ def RSSI_TO_BPS(rssi, modulation_scheme=Wifi5_empirical_goodput):
 
 
 def DISTANCE_TO_RSSI(distance, Tx=9.19, pathloss=freespace_loss):
+    """Helper function to turn a distance into an expected RSSI.
+
+    :param distance: Distance in meters.
+    :param Tx: Emitting power.
+    :param pathloss: Propagation model used (path loss).
+    :return: The expected RSSI in dBm.
+    """
     if isinstance(distance, (list, tuple, np.ndarray)):
         res = []
         for d in distance:

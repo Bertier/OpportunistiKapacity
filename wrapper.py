@@ -1,12 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 """
 Wrapper for the opportunikacapacity library. 
 Aims to calculate the contact data-exchange through integral linear interpolation.
 """
 import sys
 import os
-from decimal import Decimal
-import numpy as np
 import json
 import argparse
 import ConfigParser
@@ -90,7 +88,7 @@ if __name__ == '__main__':
     if not propagation:
         print("Error, propagation not found.")
         print("Available propagations: " +
-              str((communications.propagation_models_names)))
+              str(communications.propagation_models_names))
         sys.exit(2)
 
     for m in communications.modulation_schemes:
@@ -100,7 +98,7 @@ if __name__ == '__main__':
     if not modulation:
         print("Error, modulation not found.")
         print("Available modulations: " +
-              str((communications.modulation_schemes_names)))
+              str(communications.modulation_schemes_names))
         sys.exit(3)
 
     # A this point, everything should be set up to run.
