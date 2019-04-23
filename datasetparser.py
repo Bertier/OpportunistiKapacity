@@ -1,9 +1,9 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 from decimal import Decimal
 import sys
 import re
 import numpy as np
-import ConfigParser
+import configparser
 
 name_configuration_file = 'opportunistiKapacity.cfg'
 
@@ -52,7 +52,7 @@ class MobilityParser(object):
         :param end: Starting time of the capacity calculation. A negative number will stop at the end of file.
         """
         # Load the configuration file
-        cfg = ConfigParser.ConfigParser()
+        cfg = configparser.ConfigParser()
         cfg.read(name_configuration_file)
         # Infer the regular expression from the configuration file.
         raw_file_format = cfg.get('mobility-trace', 'file_parsing')
@@ -66,8 +66,8 @@ class MobilityParser(object):
         first_line = self.file_handle.readline()
         first_match = self.line_regex.search(first_line)
         if first_match is None:
-            print("First line of dataset is: %s \n" % first_line +
-                  "This does not match the pattern '%s'. Please verify syntax." % raw_file_format)
+            print(("First line of dataset is: %s \n" % first_line +
+                  "This does not match the pattern '%s'. Please verify syntax." % raw_file_format))
             sys.exit(9)
 
         self.time = Decimal(self.line_regex.search(self.file_handle.readline()).group('time'))
@@ -84,13 +84,13 @@ class MobilityParser(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         current = [self.previous[:]] if len(self.previous) else []
         for line in self.file_handle:
             self.line_number += 1
             fields = self.line_regex.search(line)
             if fields is None:
-                print("Error in dataset file at line %d. Please check format." % self.line_number)
+                print(("Error in dataset file at line %d. Please check format." % self.line_number))
                 sys.exit(10)
             current_fields = [fields.group('time'), fields.group('id_node'), fields.group('pos_x'),
                               fields.group('pos_y')]
@@ -114,7 +114,7 @@ class ContactParser(object):
         :param dataset: Creates an iterator over a contact dataset file.
         """
         self.file_handle = dataset
-        cfg = ConfigParser.ConfigParser()
+        cfg = configparser.ConfigParser()
         cfg.read(name_configuration_file)
         raw_file_format = cfg.get('contact-trace', 'file_parsing')
         column_delimiter = cfg.get('contact-trace', 'column_delimiter') if len(
@@ -128,13 +128,13 @@ class ContactParser(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         # TODO: Field separator fix
         line = self.file_handle.readline()
         if len(line):
             fields = self.line_regex.search(line)
             if fields is None:
-                print("Error in dataset file at line %d. Please check format." % self.line_number)
+                print(("Error in dataset file at line %d. Please check format." % self.line_number))
                 sys.exit(10)
             else:
                 return [fields.group('id1_node'), fields.group('id2_node'), fields.group('start'), fields.group('end')]

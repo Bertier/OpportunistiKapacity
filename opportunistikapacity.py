@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 """
 Calculate the contact data-exchange through integral linear interpolation.
 """
@@ -8,7 +8,7 @@ from scipy.integrate import quad
 from scipy import spatial
 from datetime import datetime
 import json
-import ConfigParser
+import configparser
 from datasetparser import MobilityParser, ContactParser
 import communications
 name_configuration_file = 'opportunistiKapacity.cfg'
@@ -126,7 +126,7 @@ class GeographicTrace(object):
                     self.integrate(ya, yb)
                 del active_contacts_data[edge]
                 del active_contacts_start[edge]
-            print time
+            print(time)
             old_edges = instant_edges
             old_graph = instant_goodput
 
@@ -158,22 +158,22 @@ class ContactTrace(object):
         precomputed_file_name = "%s/%s/%s_%s_%s.json" % (folder_ressources,
                                                          data_source,
                                                          data_source,
-                                                         propagation.func_name,
-                                                         modulation.func_name)
+                                                         propagation.__name__,
+                                                         modulation.__name__)
         try:
             precomputed_file_handle = open(precomputed_file_name, "r")
             self.presampled_contacts = json.load(precomputed_file_handle)
         except BaseException:
-            print("Cannot open the file '%s'" % precomputed_file_name)
+            print(("Cannot open the file '%s'" % precomputed_file_name))
             sys.exit(6)
         self.sampling_granularity = np.absolute(
-            eval(self.presampled_contacts.keys()[0]))
+            eval(list(self.presampled_contacts.keys())[0]))
         # Simply unpack the elements from the sampled datasets found in the
         # json file.
         self.contact_time_to_throughput_probability = {}
         for time_key in self.presampled_contacts:
-            self.contact_time_to_throughput_probability[time_key] = zip(
-                *self.presampled_contacts[time_key])
+            self.contact_time_to_throughput_probability[time_key] = list(zip(
+                *self.presampled_contacts[time_key]))
         self.number_samples = len(self.contact_time_to_throughput_probability)
 
     def get_capacity(self):

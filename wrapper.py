@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 """
 Wrapper for the opportunikacapacity library. 
 Aims to calculate the contact data-exchange through integral linear interpolation.
@@ -7,7 +7,7 @@ import sys
 import os
 import json
 import argparse
-import ConfigParser
+import configparser
 from opportunistikapacity import GeographicTrace, ContactTrace
 import communications
 
@@ -33,14 +33,14 @@ if __name__ == '__main__':
     """
     Check if configuration is present.
     """
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     try:
         with open(name_configuration_file) as f:
             cfg.read(f)
     except IOError:
-        print(
+        print((
             "This is the first run. Writing default configuration file %s." %
-            name_configuration_file)
+            name_configuration_file))
         with open(name_configuration_file, 'w') as handle_config:
             handle_config.write(sample_configuration)
             handle_config.close()
@@ -82,23 +82,23 @@ if __name__ == '__main__':
     modulation = False
     no_positions = False
     for p in communications.propagation_models:
-        if p.func_name == propagation_name:
+        if p.__name__ == propagation_name:
             propagation = p
             break
     if not propagation:
         print("Error, propagation not found.")
-        print("Available propagations: " +
-              str(communications.propagation_models_names))
+        print(("Available propagations: " +
+              str(communications.propagation_models_names)))
         sys.exit(2)
 
     for m in communications.modulation_schemes:
-        if m.func_name == modulation_name:
+        if m.__name__ == modulation_name:
             modulation = m
             break
     if not modulation:
         print("Error, modulation not found.")
-        print("Available modulations: " +
-              str(communications.modulation_schemes_names))
+        print(("Available modulations: " +
+              str(communications.modulation_schemes_names)))
         sys.exit(3)
 
     # A this point, everything should be set up to run.
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         trace = ContactTrace(dataset, propagation, modulation, "human")
         all_contacts = trace.get_capacity()
     else:
-        print("The trace kind '%s' is unknown or not supported." % trace_kind)
+        print(("The trace kind '%s' is unknown or not supported." % trace_kind))
         sys.exit(7)
     output_dir = "./results/"
     if not os.path.exists(output_dir):
@@ -122,5 +122,5 @@ if __name__ == '__main__':
               + 'contacts_%s_%s.json' % (propagation_name, modulation_name),
               'w') as fp:
         json.dump(all_contacts, fp, ensure_ascii=False, indent=4)
-        print("Wrote results to %s" % fp.name)
+        print(("Wrote results to %s" % fp.name))
     sys.exit()

@@ -1,11 +1,10 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 """
 Helper functions to estimate the throughput according to distance.
 """
 import numpy as np
 from scipy.constants import speed_of_light
-import json
-import ConfigParser
+import configparser
 name_configuration_file = 'opportunistiKapacity.cfg'
 
 
@@ -253,11 +252,11 @@ modulation_schemes = [
     Wifi5_stepwise_linear_adjusted,
     Wifi5_stepwise_fit]
 propagation_models_names = [
-    freespace_loss.func_name,
-    logDistance_loss.func_name,
-    twoRay_loss.func_name]
+    freespace_loss.__name__,
+    logDistance_loss.__name__,
+    twoRay_loss.__name__]
 modulation_schemes_names = [
-    Wifi5_empirical_goodput.func_name,
-    Wifi5_stepwise_max.func_name,
-    Wifi5_stepwise_linear_adjusted.func_name,
-    Wifi5_stepwise_fit.func_name]
+    Wifi5_empirical_goodput.__name__,
+    Wifi5_stepwise_max.__name__,
+    Wifi5_stepwise_linear_adjusted.__name__,
+    Wifi5_stepwise_fit.__name__]
