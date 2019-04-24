@@ -1,3 +1,4 @@
-from opportunistikapacity.opportunistikapacity import GeographicTrace, ContactTrace
-import opportunistikapacity.communications
-from opportunistikapacity.datasetparser import ContactParser, MobilityParser
+from .contactcalculator import GeographicTrace, ContactTrace
+from .datasetparser import ContactParser, MobilityParser
+from .communications import *
+
