@@ -38,9 +38,9 @@ if __name__ == '__main__':
         with open(name_configuration_file) as f:
             cfg.read(f)
     except IOError:
-        print((
+        print(
             "This is the first run. Writing default configuration file %s." %
-            name_configuration_file))
+            name_configuration_file)
         with open(name_configuration_file, 'w') as handle_config:
             handle_config.write(sample_configuration)
             handle_config.close()
@@ -87,8 +87,8 @@ if __name__ == '__main__':
             break
     if not propagation:
         print("Error, propagation not found.")
-        print(("Available propagations: " +
-              str(opportunistikapacity.propagation_models_names)))
+        print("Available propagations: " +
+              str(opportunistikapacity.propagation_models_names))
         sys.exit(2)
 
     for m in opportunistikapacity.modulation_schemes:
@@ -97,8 +97,8 @@ if __name__ == '__main__':
             break
     if not modulation:
         print("Error, modulation not found.")
-        print(("Available modulations: " +
-              str(opportunistikapacity.modulation_schemes_names)))
+        print("Available modulations: " +
+              str(opportunistikapacity.modulation_schemes_names))
         sys.exit(3)
 
     # A this point, everything should be set up to run.
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         trace = opportunistikapacity.ContactTrace(dataset, propagation, modulation, "human")
         all_contacts = trace.get_capacity()
     else:
-        print(("The trace kind '%s' is unknown or not supported." % trace_kind))
+        print("The trace kind '%s' is unknown or not supported." % trace_kind)
         sys.exit(7)
     output_dir = "./results/"
     if not os.path.exists(output_dir):
@@ -122,5 +122,5 @@ if __name__ == '__main__':
               + 'contacts_%s_%s.json' % (propagation_name, modulation_name),
               'w') as fp:
         json.dump(all_contacts, fp, ensure_ascii=False, indent=4)
-        print(("Wrote results to %s" % fp.name))
+        print("Wrote results to %s" % fp.name)
     sys.exit()

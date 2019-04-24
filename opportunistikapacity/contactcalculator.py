@@ -33,7 +33,7 @@ class GeographicTrace(object):
         self.bps_func = np.vectorize(RSSI_TO_BPS)
         self.dataset = dataset
 
-    def linear(x, a, b):
+    def linear(self, x, a, b):
         return a * x + b
 
     def integrate(self, ya, yb):
