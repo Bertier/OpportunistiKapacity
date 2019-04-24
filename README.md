@@ -10,7 +10,7 @@ You must provide at least **4** parameters for the software to run:
  4. A modulation scheme
 
 If these arguments are known, you can run the script:
-`./calculate_goodput_contact.py trace_kind dataset propagation_model modulation_scheme`
+`./OKwrapper.py trace_kind dataset propagation_model modulation_scheme`
 
 ## Supported traces
 

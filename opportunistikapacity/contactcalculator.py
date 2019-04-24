@@ -3,7 +3,6 @@
 Calculate the contact data-exchange through integral linear interpolation.
 """
 import sys
-import numpy as np
 from scipy.integrate import quad
 from scipy import spatial
 from datetime import datetime
@@ -34,7 +33,7 @@ class GeographicTrace(object):
         self.bps_func = np.vectorize(RSSI_TO_BPS)
         self.dataset = dataset
 
-    def linear(self, x, a, b):
+    def linear(x, a, b):
         return a * x + b
 
     def integrate(self, ya, yb):
@@ -89,15 +88,14 @@ class GeographicTrace(object):
             instant_edges = set(instant_goodput.keys()) if len(
                 instant_goodput) else set()
             """
-            There are 3 possbilities.
-            1) The contact is new at this instant, we add it to our dictionnary of active contacts
+            There are 3 possibilities.
+            1) The contact is new at this instant, we add it to our dictionary of active contacts
             2) The contact existed, we simply increment the contact capacity since it lasted longer
             3) The contact does not exist anymore, we remove it from the current contacts and count it as terminated
             """
             # If it is in the current contact, and did not exist is the
             # previous contacts, it is new.
             for edge in instant_edges - old_edges:
-                instant_distance = instant_goodput[edge]
                 ya = 0
                 yb = instant_goodput[edge]
                 active_contacts_data[edge] = self.integrate(ya, yb)
@@ -107,8 +105,6 @@ class GeographicTrace(object):
             # update the capacity.
             for edge in instant_edges & old_edges:
                 # this is a previously established contact
-                instant_distance = instant_goodput[edge]
-                previous_distance = old_graph[edge]
                 ya = old_graph[edge]
                 yb = instant_goodput[edge]
                 active_contacts_data[edge] += self.integrate(ya, yb)
@@ -119,7 +115,6 @@ class GeographicTrace(object):
                 # this is the end of the contact
                 ya = old_graph[edge]
                 yb = 0
-                previous_distance = old_graph[edge]
                 final_edge_key = "contact:%s;time:%s-%s" % (
                     edge, active_contacts_start[edge], time)
                 terminated_contacts[final_edge_key] = active_contacts_data[edge] + \
