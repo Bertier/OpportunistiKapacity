@@ -8,8 +8,8 @@ import os
 import json
 import argparse
 import configparser
-from opportunistikapacity import GeographicTrace, ContactTrace
-import communications
+import opportunistikapacity
+
 
 name_configuration_file = 'opportunistiKapacity.cfg'
 sample_configuration = """
@@ -65,12 +65,12 @@ if __name__ == '__main__':
         "propagation_model",
         type=str,
         help="Signal loss model name. Available choices: %s" % str(
-            communications.propagation_models_names).strip('[]'))
+            opportunistikapacity.propagation_models_names).strip('[]'))
     parser.add_argument(
         "modulation_scheme",
         type=str,
         help="Modulation scheme name. Available choices: %s" % str(
-            communications.modulation_schemes_names).strip('[]'))
+            opportunistikapacity.modulation_schemes_names).strip('[]'))
     args = parser.parse_args()
 
     dataset = args.dataset
@@ -81,33 +81,33 @@ if __name__ == '__main__':
     propagation = False
     modulation = False
     no_positions = False
-    for p in communications.propagation_models:
+    for p in opportunistikapacity.propagation_models:
         if p.__name__ == propagation_name:
             propagation = p
             break
     if not propagation:
         print("Error, propagation not found.")
         print(("Available propagations: " +
-              str(communications.propagation_models_names)))
+              str(opportunistikapacity.propagation_models_names)))
         sys.exit(2)
 
-    for m in communications.modulation_schemes:
+    for m in opportunistikapacity.modulation_schemes:
         if m.__name__ == modulation_name:
             modulation = m
             break
     if not modulation:
         print("Error, modulation not found.")
         print(("Available modulations: " +
-              str(communications.modulation_schemes_names)))
+              str(opportunistikapacity.modulation_schemes_names)))
         sys.exit(3)
 
     # A this point, everything should be set up to run.
     cfg.write(open(name_configuration_file, 'w'))
     if trace_kind == "mobility":
-        trace = GeographicTrace(dataset, propagation, modulation)
+        trace = opportunistikapacity.GeographicTrace(dataset, propagation, modulation)
         all_contacts = trace.get_capacity()
     elif trace_kind == "contact":
-        trace = ContactTrace(dataset, propagation, modulation, "human")
+        trace = opportunistikapacity.ContactTrace(dataset, propagation, modulation, "human")
         all_contacts = trace.get_capacity()
     else:
         print(("The trace kind '%s' is unknown or not supported." % trace_kind))
