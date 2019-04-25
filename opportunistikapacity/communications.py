@@ -5,15 +5,20 @@ Helper functions to estimate the throughput according to distance.
 import numpy as np
 from scipy.constants import speed_of_light
 import configparser
-name_configuration_file = 'opportunistiKapacity.cfg'
 
+name_configuration_file = 'opportunistiKapacity.cfg'
 
 """
 CONSTANTS
 """
-min_rssi = 87
-freq = 5180 * 10**6
+cfg = configparser.ConfigParser()
+configuration = cfg.read(name_configuration_file)
+
+min_rssi = cfg.getint('communications', 'min_rssi', fallback=87)
+freq = cfg.getfloat('communications', 'frequency', fallback=5180) * 10 ** 6
 wavelength = speed_of_light / freq
+
+
 threshold_rssi = np.array(
     [0, -55, -57, -58, -59, -63, -67, -70, -72, -75, -min_rssi])
 data_rate = [866, 780, 650, 585, 520, 390, 260, 195, 130, 65]
@@ -76,15 +81,15 @@ def twoRay_loss(distance, epsilon_r=1.00673130, height=1.39):
     height_sender = height
     height_receiver = height
     d_reflection = np.sqrt(
-        (distance**2) + (height_sender + height_receiver)**2)
-    d_LoS = np.sqrt((distance**2) + (height_sender - height_receiver)**2)
+        (distance ** 2) + (height_sender + height_receiver) ** 2)
+    d_LoS = np.sqrt((distance ** 2) + (height_sender - height_receiver) ** 2)
     phi = 2 * np.pi * ((d_LoS - d_reflection) / wavelength)
     sin_theta = (height_sender + height_receiver) / d_reflection
     cos_theta = distance / d_reflection
-    gamma = (sin_theta - np.sqrt(epsilon_r - cos_theta**2)) / \
-        (sin_theta + np.sqrt(epsilon_r - cos_theta ** 2))
+    gamma = (sin_theta - np.sqrt(epsilon_r - cos_theta ** 2)) / \
+            (sin_theta + np.sqrt(epsilon_r - cos_theta ** 2))
     loss_two_ray = 10 * np.log10((4 * np.pi * (distance / wavelength) * 1 / (
-        np.sqrt(((1 + gamma * np.cos(phi))**2 + gamma**2 * np.sin(phi)**2))))**2)
+        np.sqrt(((1 + gamma * np.cos(phi)) ** 2 + gamma ** 2 * np.sin(phi) ** 2)))) ** 2)
     return loss_two_ray if loss_two_ray > 0 else 0
 
 
@@ -112,7 +117,7 @@ def Wifi5_empirical_goodput(rssi):
     args = [-1, [-0.359363, 42.356715],
             [-0.791134, 66.438033], [-0.236949, 21.128388]]
     if rssi > limits[-1]:
-        return 0
+        return 0.0
     for j, lower in enumerate(limits):
         if lower < rssi <= limits[j + 1]:
             if hasattr(args[j], "__len__"):
@@ -144,7 +149,7 @@ def Wifi5_stepwise_max(rssi):
     if rssi >= 0:
         return data_rate[0]
     elif rssi < threshold_rssi[-1]:
-        return 0
+        return 0.0
     else:
         return data_rate[np.where(threshold_rssi < rssi)[0][0] - 1]
 
@@ -171,7 +176,7 @@ def Wifi5_stepwise_linear_adjusted(rssi):
     if rssi >= 0:
         return data_rate[0]
     elif rssi < threshold_rssi[-1]:
-        return 0
+        return 0.0
     elif np.where(threshold_rssi <= rssi)[0][0] - 1 == len(data_rate) - 1:
         return rssi * 4.33 + 390
     else:
@@ -199,7 +204,7 @@ def Wifi5_stepwise_fit(rssi):
     if rssi >= 0:
         return data_rate[0]
     elif rssi <= threshold_rssi[-1]:
-        return 0
+        return 0.0
     else:
         return data_rate[np.where(threshold_rssi < rssi)[0][0] - 1]
 
@@ -217,9 +222,15 @@ def RSSI_TO_BPS(rssi, modulation_scheme=Wifi5_empirical_goodput):
     """
     if isinstance(rssi, (list, tuple, np.ndarray)):
         res = []
+        if isinstance(rssi, np.ndarray):
+            original_shape = rssi.shape
+            rssi = rssi.flatten()
         for r in rssi:
             res.append(modulation_scheme(r))
-        return res
+        if not isinstance(rssi, np.ndarray):
+            return res
+        else:
+            return np.array(res).reshape(original_shape)
     elif isinstance(rssi, (float, int)):
         return modulation_scheme(rssi)
     else:
@@ -236,9 +247,15 @@ def DISTANCE_TO_RSSI(distance, Tx=9.19, pathloss=freespace_loss):
     """
     if isinstance(distance, (list, tuple, np.ndarray)):
         res = []
+        if isinstance(distance, np.ndarray):
+            original_shape = distance.shape
+            distance = distance.flatten()
         for d in distance:
             res.append(Tx - pathloss(d))
-        return res
+        if not isinstance(distance, np.ndarray):
+            return res
+        else:
+            return np.array(res).reshape(original_shape)
     elif isinstance(distance, (float, int)):
         return Tx - pathloss(distance)
     else:

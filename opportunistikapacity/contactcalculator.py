@@ -3,50 +3,53 @@
 Calculate the contact data-exchange through integral linear interpolation.
 """
 import sys
+from decimal import Decimal
+
 from scipy.integrate import quad
 from scipy import spatial
 from datetime import datetime
 import json
-import configparser
 from .datasetparser import MobilityParser, ContactParser
 from .communications import *
+
 name_configuration_file = 'opportunistiKapacity.cfg'
 
 
 class GeographicTrace(object):
 
-    def __init__(self, dataset, propagation, modulation, start=-1, end=-1):
+    def __init__(self, dataset, propagation, modulation):
         """
 
         :param dataset: File object of the mobility trace.
         :param propagation: Name of propagation (a.k.a. path loss) to be used.
         :param modulation: Name of the modulation scheme to be used.
-        :param start: Starting time of the capacity calculation. A negative number will start at beginning of file.
-        :param end: Starting time of the capacity calculation. A negative number will stop at the end of file.
         """
         self.propagation = propagation
         self.modulation = modulation
-        self.time_granularity = 0.6
-        self.xa = self.time_granularity
-        self.xb = self.time_granularity * 2
         self.rssi_func = np.vectorize(DISTANCE_TO_RSSI)
         self.bps_func = np.vectorize(RSSI_TO_BPS)
         self.dataset = dataset
+        cfg = configparser.ConfigParser()
+        cfg.read(name_configuration_file)
+        # Infer the regular expression from the configuration file.
+        self.distance_method = cfg.get('mobility-trace', 'distance_calculation', fallback='euclidean')
+
 
     def linear(self, x, a, b):
         return a * x + b
 
-    def integrate(self, ya, yb):
+    def integrate(self, ya, yb, granularity):
         """
 
         :param point a:
         :param point b:
         :return: The quantity of data sent.
         """
-        a = (yb - ya) / (self.time_granularity)
-        b = ya - a * self.xa
+
+        a = yb - ya / granularity
+        b = ya  # would be ya - a * xa, but xa=0
         data_contact, error_integration = quad(
-            self.linear, self.xa, self.xb, args=(a, b))
+            self.linear, 0, granularity, args=(a, b))
         return data_contact
 
     def get_capacity(self):
@@ -60,22 +63,22 @@ class GeographicTrace(object):
         active_contacts_data = {}
         active_contacts_start = {}
         terminated_contacts = {}
-        for times, id_nodes, posx_nodes, posy_nodes in MobilityParser(
-                self.dataset):
-            time = float(times[0])
-            # Get the current position of all nodes
+        dataiterator = MobilityParser(self.dataset)
+        for times, id_nodes, posx_nodes, posy_nodes in dataiterator:
+            time = np.float(times[0])
+            # Get the current position of all nodes from the data iteration
             position_nodes = np.array((posx_nodes, posy_nodes)).astype(float).T
-            # Find which nodes are able to exchange data
+            # Calculate the distance between nodes
             distance_between_nodes = spatial.distance.cdist(
-                position_nodes, position_nodes)
-            throughput_between_nodes = self.bps_func(
-                self.rssi_func(
+                position_nodes, position_nodes, metric=self.distance_method)
+            # See if nodes are able to exchange at a link speed > 0
+            throughput_between_nodes = RSSI_TO_BPS(
+                DISTANCE_TO_RSSI(
                     distance_between_nodes,
                     pathloss=self.propagation),
                 modulation_scheme=self.modulation)
             throughput_between_nodes *= np.tri(
                 throughput_between_nodes.shape[0], throughput_between_nodes.shape[1], -1)
-            # np.fill_diagonal(throughput_between_nodes,0)
             instant_edges_indexes = np.where(throughput_between_nodes > 0)
             instant_goodput = {}
             if len(instant_edges_indexes[0]):
@@ -98,8 +101,8 @@ class GeographicTrace(object):
             for edge in instant_edges - old_edges:
                 ya = 0
                 yb = instant_goodput[edge]
-                active_contacts_data[edge] = self.integrate(ya, yb)
-                active_contacts_start[edge] = time - self.time_granularity
+                active_contacts_data[edge] = self.integrate(ya, yb, dataiterator.granularity)
+                active_contacts_start[edge] = time - dataiterator.granularity
 
             # If it existed both in previous and current contacts, simply
             # update the capacity.
@@ -107,7 +110,7 @@ class GeographicTrace(object):
                 # this is a previously established contact
                 ya = old_graph[edge]
                 yb = instant_goodput[edge]
-                active_contacts_data[edge] += self.integrate(ya, yb)
+                active_contacts_data[edge] += self.integrate(ya, yb, dataiterator.granularity)
 
             # If there are contact that previously existed and are not found in
             # the current one, consider it terminated.
@@ -115,10 +118,10 @@ class GeographicTrace(object):
                 # this is the end of the contact
                 ya = old_graph[edge]
                 yb = 0
-                final_edge_key = "contact:%s;time:%s-%s" % (
+                final_edge_key = "contact:%s;time:%.2f-%.2f" %  (
                     edge, active_contacts_start[edge], time)
                 terminated_contacts[final_edge_key] = active_contacts_data[edge] + \
-                    self.integrate(ya, yb)
+                                                      self.integrate(ya, yb, dataiterator.granularity)
                 del active_contacts_data[edge]
                 del active_contacts_start[edge]
             print(time)
@@ -135,14 +138,14 @@ class ContactTrace(object):
         :param dataset: File object of the contact trace.
         :param propagation: Name of propagation (a.k.a. path loss) to be used.
         :param modulation: Name of the modulation scheme to be used.
-        :param start: Starting time of the capacity calculation. A negative number will start at beginning of file.
-        :param end: Starting time of the capacity calculation. A negative number will stop at the end of file.
         """
         folder_ressources = "./ressources/proba_duration_capacity"
         self.propagation = propagation
         self.modulation = modulation
         self.dataset = dataset
-
+        cfg = configparser.ConfigParser()
+        cfg.read(name_configuration_file)
+        data_kind = cfg.get('contact-trace', 'mobility', fallback='human')
         if data_kind == "human":
             data_source = "stockholm"
         elif data_kind == "vehicle":
@@ -159,7 +162,7 @@ class ContactTrace(object):
             precomputed_file_handle = open(precomputed_file_name, "r")
             self.presampled_contacts = json.load(precomputed_file_handle)
         except BaseException:
-            print(("Cannot open the file '%s'" % precomputed_file_name))
+            print("Cannot open the file '%s'" % precomputed_file_name)
             sys.exit(6)
         self.sampling_granularity = np.absolute(
             eval(list(self.presampled_contacts.keys())[0]))
@@ -182,7 +185,7 @@ class ContactTrace(object):
         for id1, id2, time_start_raw, time_end_raw in ContactParser(
                 self.dataset):
             # todo: take time format in consideration. For now just make the
-            # difference.
+            # difference and assume unix timestamp.
             time_start = datetime.fromtimestamp(float(time_start_raw))
             time_end = datetime.fromtimestamp(float(time_end_raw))
             time_contact = time_end - time_start
@@ -194,7 +197,7 @@ class ContactTrace(object):
                 if index_sampling > (
                         (self.number_samples - 1) * self.sampling_granularity):
                     index_sampling = (
-                        self.number_samples - 1) * self.sampling_granularity
+                                             self.number_samples - 1) * self.sampling_granularity
                 formated_time_key = "%s-%s" % (index_sampling,
                                                index_sampling + self.sampling_granularity)
                 throughput_values, probability_value = self.contact_time_to_throughput_probability[

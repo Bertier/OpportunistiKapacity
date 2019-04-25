@@ -44,20 +44,19 @@ contact_params = {
 
 class MobilityParser(object):
 
-    def __init__(self, dataset, start=-1, end=-1):
-        """Creates an iterator over a mobility dataset file.
+    def __init__(self, dataset):
+        """Creates an iterator over a mobility dataset file. Each iteration returns the group of nodes existing during the snapshot.
 
         :param dataset: File object of the mobility trace.
-        :param start: Starting time of the capacity calculation. A negative number will start at beginning of file.
-        :param end: Starting time of the capacity calculation. A negative number will stop at the end of file.
         """
         # Load the configuration file
         cfg = configparser.ConfigParser()
         cfg.read(name_configuration_file)
         # Infer the regular expression from the configuration file.
-        raw_file_format = cfg.get('mobility-trace', 'file_parsing')
-        column_delimiter = cfg.get('mobility-trace', 'column_delimiter') if len(
-            cfg.get('mobility-trace', 'column_delimiter')) else '\s'
+        raw_file_format = cfg.get('mobility-trace', 'file_parsing', fallback='time id x y')
+        column_delimiter = cfg.get('mobility-trace', 'column_delimiter', fallback='')
+        if not len(column_delimiter):
+            column_delimiter='\s'
         pre_regex_format = ("^%s*{" % column_delimiter) + ("}%s+{" % column_delimiter).join(
             raw_file_format.split()) + "}"
         self.line_regex = re.compile(r'%s' % pre_regex_format.format(**mobility_params))
@@ -75,7 +74,7 @@ class MobilityParser(object):
         for line in self.file_handle:
             current_time = Decimal(self.line_regex.search(line).group('time'))
             if current_time != self.time:
-                granularity = current_time - self.time
+                self.granularity = np.float(current_time - self.time)
                 break
         self.file_handle.seek(0)
         self.previous = []
@@ -90,7 +89,7 @@ class MobilityParser(object):
             self.line_number += 1
             fields = self.line_regex.search(line)
             if fields is None:
-                print(("Error in dataset file at line %d. Please check format." % self.line_number))
+                print("Error in dataset file at line %d. Please check format." % self.line_number)
                 sys.exit(10)
             current_fields = [fields.group('time'), fields.group('id_node'), fields.group('pos_x'),
                               fields.group('pos_y')]
@@ -109,16 +108,15 @@ class MobilityParser(object):
 class ContactParser(object):
 
     def __init__(self, dataset):
-        """Creates an iterator over a contact dataset file.
+        """Creates an iterator over a contact dataset file. Each iteration returns a single contact.
 
         :param dataset: Creates an iterator over a contact dataset file.
         """
         self.file_handle = dataset
         cfg = configparser.ConfigParser()
         cfg.read(name_configuration_file)
-        raw_file_format = cfg.get('contact-trace', 'file_parsing')
-        column_delimiter = cfg.get('contact-trace', 'column_delimiter') if len(
-            cfg.get('mobility-trace', 'column_delimiter')) else '\s'
+        raw_file_format = cfg.get('contact-trace', 'file_parsing', fallback='id1 id2 start end')
+        column_delimiter = cfg.get('contact-trace', 'column_delimiter', fallback='\s')
         pre_regex_format = ("^%s*{" % column_delimiter) + ("}%s+{" % column_delimiter).join(
             raw_file_format.split()) + "}"
         self.line_regex = re.compile(r'%s' % pre_regex_format.format(**contact_params))
@@ -129,15 +127,15 @@ class ContactParser(object):
         return self
 
     def __next__(self):
-        # TODO: Field separator fix
         line = self.file_handle.readline()
+        self.line += 1
         if len(line):
             fields = self.line_regex.search(line)
             if fields is None:
-                print(("Error in dataset file at line %d. Please check format." % self.line_number))
+                print("Error in dataset file at line %d. Please check format." % self.line_number)
                 sys.exit(10)
             else:
                 return [fields.group('id1_node'), fields.group('id2_node'), fields.group('start'), fields.group('end')]
         else:
             raise StopIteration
-        self.line += 1
+

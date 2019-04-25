@@ -24,9 +24,9 @@ column_delimiter =
 file_parsing = time dummy id x y
 
 [communications]
-min_rssi = -87
+min_rssi = 87
 frequency = 5180
-Wifi5_goodput_bottleneck = 24.267885
+
 """
 
 if __name__ == '__main__':
@@ -45,10 +45,6 @@ if __name__ == '__main__':
             handle_config.write(sample_configuration)
             handle_config.close()
     cfg.read(name_configuration_file)
-    """
-    cfg.add_section('Communications')
-    cfg.set('Communications', 'min_rssi', '-87')
-    """
     """
     Check if args are correct
     """
