@@ -1,7 +1,7 @@
 # OpportunistiKapacity
 A python library to turn mobility traces into opportunistic contact capacity. 
 This library aims to simplify the calculation of total network data capacity, more precisely in the context of contact networks. 
-## Basic run
+## Basic run using wrapper
 You must provide at least **4** parameters for the software to run:
 
  1. The trace kind
@@ -48,10 +48,19 @@ The propagation models, found in the `communications` module, calculate the sign
 
 ## Modulation schemes
 
-The modulation schemes, found in the `communications` module, set a data rate for a given RSSI between two nodes. So far, we propose the following path loss models (explained more thoroughly in our paper):
+The modulation schemes, found in the `communications` module, set a data rate for a given RSSI between two nodes. So far, we propose the following path loss models (explained thoroughly in our paper):
 
  - `Wifi5_empirical_goodput`
  - `Wifi5_stepwise_max`
  - `Wifi5_stepwise_linear_adjusted`
  - `Wifi5_stepwise_fit`
+ 
+# Module and classes
+
+The module is separated in 3 files:
+
+ - `communications` everything function to do with the translation of distance into a throughput estimation.
+ - `datasetparser`: provides two classes, (`ContactParser`, `MobilityParser`) to iterate over a dataset file. 
+ - `contactcalculator`, provides the two classes (`GeographicTrace`, `ContactTrace`) to calculate the contact capacity.
+ 
  
